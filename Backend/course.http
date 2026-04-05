@@ -1,0 +1,31 @@
+//tao khoa hoc
+POST http://localhost:3001/school/courses
+Content-Type: application/json
+
+{
+    "title": "Lap Trinh",
+    "code": "TMP2",
+    "users": {
+      "connect": [{ "id": 2 }]
+    }
+}
+
+###
+//user dang ky khoa hoc
+POST http://localhost:3001/school/enroll
+Content-Type: application/json
+
+{
+    "userId": 1,
+    "courseId": 1
+}
+
+###
+// Xoa nguoi dung ra khoi khoa hoc (Huy dang ky)
+POST http://localhost:3001/school/unenroll
+Content-Type: application/json
+
+{
+    "userId": 2,
+    "courseId": 4
+}

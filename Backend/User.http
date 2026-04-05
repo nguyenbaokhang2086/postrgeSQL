@@ -3,6 +3,15 @@ POST http://localhost:3001/users
 Content-Type: application/json
 
 {
-    "name": "John Doe",
-    "email": "nguyenbaokhang891@gmail.com"
-}   
+    "name": "Khang Khung",
+    "email": "nguyenbaokhang8911@gmail.com"
+}
+
+###
+//Xoa khoa hoc
+DELETE http://localhost:3001/school/courses/1
+###
+
+//Xoa nguoi dung
+DELETE http://localhost:3001/school/users/1
+###

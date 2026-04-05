@@ -3,6 +3,7 @@ import express from "express";
 import userRouter from "./routes/user.route.js";
 import dotenv from "dotenv";
 import { env } from "prisma/config";
+import schoolRouter from "./routes/school.route.js";
 
 dotenv.config();
 
@@ -14,6 +15,7 @@ app.use(express.json());
 
 // Routes
 app.use("/users", userRouter);
+app.use("/school", schoolRouter);
 
 // Khởi động Server
 app.listen(PORT, () => {
