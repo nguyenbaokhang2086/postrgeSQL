@@ -1,7 +1,11 @@
 import express from "express";
 import {
   createUserHandler,
+  updateUserHandler,
+  getAllUsersHandler,
   createCourseHandler,
+  getAllCoursesHandler,
+  updateCourseHandler,
   enrollHandler,
   getUserTranscriptHandler,
   deleteCourseHandler,
@@ -11,8 +15,13 @@ import {
 
 const router = express.Router();
 
+router.get("/users", getAllUsersHandler);
 router.post("/users", createUserHandler);
+router.put("/users/:id", updateUserHandler);
+
+router.get("/courses", getAllCoursesHandler);
 router.post("/courses", createCourseHandler);
+router.put("/courses/:id", updateCourseHandler);
 
 // Đăng ký: POST /api/school/enroll
 // Body: { "userId": 1, "courseId": 10 }

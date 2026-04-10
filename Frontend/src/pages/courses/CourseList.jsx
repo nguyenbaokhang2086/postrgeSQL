@@ -20,25 +20,16 @@ const CourseList = () => {
 
   const fetchCourses = async () => {
     try {
-      const res = await api.get('/school/courses').catch(() => ({ data: [] })); 
-      if (!res.data || !Array.isArray(res.data) || res.data.length === 0) {
-        setCourses([
-          { id: 1, title: 'Introduction to React', code: 'RCT101', enrolled: 45, status: 'Active' },
-          { id: 2, title: 'Advanced Network Protocols', code: 'NET302', enrolled: 28, status: 'Active' },
-        ]);
-      } else {
-        // Assume API format maps correctly
-        setCourses(res.data.map(c => ({...c, status: c.status || 'Active', enrolled: c.users?.length || 0})));
-      }
+      const res = await api.get('/school/courses');
+      setCourses(res.data.map(c => ({ ...c, enrolled: c.users?.length || 0 })));
     } catch (error) {
       console.error('Failed to fetch courses', error);
-      if (!Array.isArray(courses) || courses.length === 0) {
-         setCourses([{ id: 1, title: 'Fallback Course', code: 'FB101', enrolled: 0, status: 'Active' }]);
-      }
+      setCourses([]);
     } finally {
       setIsLoading(false);
     }
   };
+
 
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this course?')) {

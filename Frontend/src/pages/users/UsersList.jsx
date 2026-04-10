@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Eye, Trash2, X } from 'lucide-react';
+import { Plus, Search, Eye, Trash2, X, Edit } from 'lucide-react';
 import api from '../../lib/api';
 import { Link } from 'react-router-dom';
 
@@ -12,6 +12,7 @@ const UsersList = () => {
   const [formData, setFormData] = useState({ name: '', email: '', role: 'Student' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [editingUser, setEditingUser] = useState(null);
 
   useEffect(() => {
     fetchUsers();
@@ -19,11 +20,10 @@ const UsersList = () => {
 
   const fetchUsers = async () => {
     try {
-      const res = await api.get('/users');
+      const res = await api.get('/school/users');
       setUsers(res.data);
     } catch (error) {
       console.error('Failed to fetch users', error);
-      // For demo if backend is down
       if (!users.length) {
          setUsers([
            { id: 1, name: 'John Doe', email: 'john@example.com', createdAt: new Date() }
@@ -32,6 +32,20 @@ const UsersList = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const openCreateModal = () => {
+    setEditingUser(null);
+    setFormData({ name: '', email: '', role: 'Student' });
+    setError('');
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (user) => {
+    setEditingUser(user);
+    setFormData({ name: user.name, email: user.email, role: user.role || 'Student' });
+    setError('');
+    setIsModalOpen(true);
   };
 
   const handleDelete = async (id) => {
@@ -45,21 +59,30 @@ const UsersList = () => {
     }
   };
 
-  const handleCreateUser = async (e) => {
+  const handleSubmitUser = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     setError('');
 
     try {
-      const res = await api.post('/school/users', { name: formData.name, email: formData.email });
-      setUsers([...users, res.data]);
+      if (editingUser) {
+        const res = await api.put(`/school/users/${editingUser.id}`, {
+          name: formData.name,
+          email: formData.email,
+        });
+        setUsers(users.map(u => u.id === editingUser.id ? { ...u, ...res.data } : u));
+      } else {
+        const res = await api.post('/school/users', { name: formData.name, email: formData.email });
+        setUsers([res.data, ...users]);
+      }
       setIsModalOpen(false);
       setFormData({ name: '', email: '', role: 'Student' });
+      setEditingUser(null);
     } catch (err) {
       if (err.response?.status === 409) {
         setError('Email already exists in the system.');
       } else {
-        setError('Failed to create user. Please try again.');
+        setError(editingUser ? 'Failed to update user. Please try again.' : 'Failed to create user. Please try again.');
       }
     } finally {
       setIsSubmitting(false);
@@ -74,7 +97,7 @@ const UsersList = () => {
           <p className="text-slate-500 text-sm mt-1">Manage platform users and their enrollment access.</p>
         </div>
         <button 
-          onClick={() => setIsModalOpen(true)}
+          onClick={openCreateModal}
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm flex items-center shadow-blue-500/20"
         >
           <Plus className="w-4 h-4 mr-2" />
@@ -134,6 +157,13 @@ const UsersList = () => {
                       <Link to={`/users/${user.id}`} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors inline-block text-center cursor-pointer">
                         <Eye className="w-4 h-4" />
                       </Link>
+                      <button
+                        className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors inline-block text-center cursor-pointer"
+                        onClick={() => openEditModal(user)}
+                        title="Edit user"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
                       <button className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors inline-block text-center cursor-pointer" onClick={() => handleDelete(user.id)}>
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -151,13 +181,15 @@ const UsersList = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 animate-in fade-in zoom-in-95 duration-200">
             <div className="flex justify-between items-center p-6 border-b border-slate-100">
-              <h3 className="text-lg font-bold text-slate-800 tracking-tight">Create New User</h3>
+              <h3 className="text-lg font-bold text-slate-800 tracking-tight">
+                {editingUser ? 'Edit User' : 'Create New User'}
+              </h3>
               <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-1 rounded-md transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>
             
-            <form onSubmit={handleCreateUser}>
+            <form onSubmit={handleSubmitUser}>
               <div className="p-6 space-y-4">
                 {error && <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100">{error}</div>}
                 
@@ -212,7 +244,10 @@ const UsersList = () => {
                   disabled={isSubmitting}
                   className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors shadow-sm shadow-blue-500/20 disabled:opacity-70 flex items-center"
                 >
-                  {isSubmitting ? 'Creating...' : 'Create User'}
+                  {isSubmitting
+                    ? (editingUser ? 'Updating...' : 'Creating...')
+                    : (editingUser ? 'Update User' : 'Create User')
+                  }
                 </button>
               </div>
             </form>
